@@ -1,0 +1,1926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="StudyFlow student productivity dashboard">
+  <title>StudyFlow - Student Productivity Dashboard</title>
+  <script>
+    (function () {
+      const savedTheme = localStorage.getItem("studyflow.theme");
+      const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      if (savedTheme === "dark" || (!savedTheme && prefersDark)) {
+        document.documentElement.classList.add("dark");
+      }
+    })();
+
+    tailwind = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          screens: {
+            xs: "420px"
+          }
+        }
+      }
+    };
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --surface: rgba(255, 255, 255, 0.86);
+      --surface-strong: #ffffff;
+      --text: #18181b;
+      --muted: #6f717a;
+      --border: rgba(24, 24, 27, 0.09);
+      --shadow: 0 18px 55px rgba(43, 48, 70, 0.11);
+      --soft-shadow: 0 10px 30px rgba(43, 48, 70, 0.08);
+      --accent: #2563eb;
+      --accent-2: #0f9f7a;
+      --accent-3: #f97316;
+      --accent-4: #a855f7;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --success: #10b981;
+      --ring-track: #e8ebf2;
+      --input: rgba(255, 255, 255, 0.9);
+    }
+
+    .dark {
+      --bg: #151515;
+      --surface: rgba(32, 32, 35, 0.82);
+      --surface-strong: #202023;
+      --text: #f4f4f5;
+      --muted: #a1a1aa;
+      --border: rgba(244, 244, 245, 0.1);
+      --shadow: 0 18px 60px rgba(0, 0, 0, 0.34);
+      --soft-shadow: 0 10px 32px rgba(0, 0, 0, 0.28);
+      --accent: #60a5fa;
+      --accent-2: #34d399;
+      --accent-3: #fb923c;
+      --accent-4: #c084fc;
+      --ring-track: #2c2c30;
+      --input: rgba(39, 39, 42, 0.9);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      min-height: 100vh;
+      overflow-x: hidden;
+      background:
+        linear-gradient(135deg, rgba(37, 99, 235, 0.08), transparent 28%),
+        linear-gradient(315deg, rgba(15, 159, 122, 0.08), transparent 24%),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      transition: background-color 280ms ease, color 280ms ease;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      touch-action: manipulation;
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      max-width: 100vw;
+      overflow-x: hidden;
+    }
+
+    main {
+      min-width: 0;
+      max-width: 100vw;
+      overflow-x: hidden;
+    }
+
+    .glass-panel {
+      min-width: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      box-shadow: var(--soft-shadow);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      transition: background-color 240ms ease, border-color 240ms ease, box-shadow 240ms ease, transform 240ms ease;
+    }
+
+    .solid-panel {
+      min-width: 0;
+      background: var(--surface-strong);
+      border: 1px solid var(--border);
+      box-shadow: var(--soft-shadow);
+      transition: background-color 240ms ease, border-color 240ms ease, box-shadow 240ms ease, transform 240ms ease;
+    }
+
+    .section-card {
+      min-width: 0;
+      border-radius: 8px;
+      padding: clamp(1rem, 1.8vw, 1.35rem);
+    }
+
+    .icon-btn {
+      display: inline-flex;
+      height: 2.5rem;
+      width: 2.5rem;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--input);
+      color: var(--text);
+      transition: transform 180ms ease, background-color 180ms ease, border-color 180ms ease;
+    }
+
+    .icon-btn:hover {
+      transform: translateY(-1px);
+      border-color: rgba(37, 99, 235, 0.28);
+    }
+
+    .primary-btn,
+    .soft-btn,
+    .danger-btn {
+      display: inline-flex;
+      min-height: 2.6rem;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      border-radius: 8px;
+      padding: 0.65rem 0.95rem;
+      font-weight: 700;
+      transition: transform 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
+      white-space: nowrap;
+      max-width: 100%;
+    }
+
+    .primary-btn {
+      background: linear-gradient(135deg, var(--accent), #7c3aed);
+      color: #ffffff;
+      box-shadow: 0 14px 34px rgba(37, 99, 235, 0.24);
+    }
+
+    .soft-btn {
+      border: 1px solid var(--border);
+      background: var(--input);
+      color: var(--text);
+    }
+
+    .danger-btn {
+      border: 1px solid rgba(239, 68, 68, 0.24);
+      background: rgba(239, 68, 68, 0.1);
+      color: #dc2626;
+    }
+
+    .primary-btn:hover,
+    .soft-btn:hover,
+    .danger-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .form-field {
+      min-width: 0;
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--input);
+      color: var(--text);
+      outline: none;
+      padding: 0.7rem 0.82rem;
+      transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+    }
+
+    .form-field:focus {
+      border-color: rgba(37, 99, 235, 0.58);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+    }
+
+    .muted-text {
+      color: var(--muted);
+    }
+
+    .sidebar {
+      width: 17.5rem;
+      transition: width 240ms ease, transform 240ms ease;
+    }
+
+    body[data-sidebar="collapsed"] main{margin-left:5.7rem!important;}
+    main{margin-left:17.5rem;}
+    @media (max-width:1023px){
+      main,body[data-sidebar="collapsed"] main{margin-left:0!important;}
+    }
+    body[data-sidebar="collapsed"] .sidebar {
+      width: 5.7rem;
+    }
+
+    body[data-sidebar="collapsed"] .sidebar-label,
+    body[data-sidebar="collapsed"] .sidebar-meta,
+    body[data-sidebar="collapsed"] .sidebar-title {
+      display: none;
+    }
+
+    body[data-sidebar="collapsed"] .sidebar-link {
+      justify-content: center;
+    }
+
+    body[data-sidebar="collapsed"] .sidebar-logo {
+      justify-content: center;
+    }
+
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 0.78rem;
+      border-radius: 8px;
+      padding: 0.78rem 0.85rem;
+      color: var(--muted);
+      transition: background-color 180ms ease, color 180ms ease, transform 180ms ease;
+    }
+
+    .sidebar-link:hover,
+    .sidebar-link.active {
+      background: rgba(37, 99, 235, 0.1);
+      color: var(--text);
+      transform: translateX(2px);
+    }
+
+    .stat-card:hover,
+    .quick-action:hover,
+    .badge-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow);
+    }
+
+    .fade-up {
+      opacity: 0;
+      transform: translateY(12px);
+      animation: fadeUp 520ms ease forwards;
+    }
+
+    @keyframes fadeUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .scale-in {
+      animation: scaleIn 220ms ease both;
+    }
+
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.97);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .progress-track {
+      height: 0.62rem;
+      overflow: hidden;
+      border-radius: 999px;
+      background: var(--ring-track);
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      transition: width 650ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .priority-low {
+      color: #047857;
+      background: rgba(16, 185, 129, 0.12);
+    }
+
+    .priority-medium {
+      color: #b45309;
+      background: rgba(245, 158, 11, 0.16);
+    }
+
+    .priority-high {
+      color: #be123c;
+      background: rgba(244, 63, 94, 0.13);
+    }
+
+    .task-checkbox {
+      position: relative;
+      display: inline-flex;
+      height: 1.32rem;
+      width: 1.32rem;
+      flex: 0 0 1.32rem;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      border: 2px solid rgba(37, 99, 235, 0.38);
+      background: var(--input);
+      transition: background-color 180ms ease, transform 180ms ease, border-color 180ms ease;
+    }
+
+    .task-checkbox svg {
+      opacity: 0;
+      transform: scale(0.65);
+      transition: opacity 160ms ease, transform 160ms ease;
+    }
+
+    .task-checkbox.done {
+      border-color: var(--success);
+      background: var(--success);
+      transform: scale(1.04);
+    }
+
+    .task-checkbox.done svg {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .timeline-dot {
+      position: relative;
+    }
+
+    .timeline-dot::before {
+      content: "";
+      position: absolute;
+      left: 0.55rem;
+      top: 2rem;
+      bottom: -1rem;
+      width: 1px;
+      background: var(--border);
+    }
+
+    .timeline-dot:last-child::before {
+      display: none;
+    }
+
+    .timer-ring {
+      --timer-progress: 0%;
+      display: grid;
+      place-items: center;
+      width: min(62vw, 13rem);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: conic-gradient(var(--accent) var(--timer-progress), var(--ring-track) 0);
+      box-shadow: inset 0 0 0 1px var(--border), var(--soft-shadow);
+      position: relative;
+      transition: background 260ms ease;
+    }
+
+    .timer-ring::after {
+      content: "";
+      position: absolute;
+      inset: 0.72rem;
+      border-radius: inherit;
+      background: var(--surface-strong);
+      border: 1px solid var(--border);
+    }
+
+    .timer-ring > span {
+      position: relative;
+      z-index: 1;
+    }
+
+    .chart-bar {
+      width: 100%;
+      border-radius: 999px 999px 6px 6px;
+      background: linear-gradient(180deg, var(--accent-2), var(--accent));
+      min-height: 0.5rem;
+      transform-origin: bottom;
+      animation: barRise 680ms ease both;
+    }
+
+    @keyframes barRise {
+      from {
+        transform: scaleY(0.12);
+      }
+      to {
+        transform: scaleY(1);
+      }
+    }
+
+    .theme-toggle-thumb {
+      transform: translateX(0);
+      transition: transform 220ms ease;
+    }
+
+    .dark .theme-toggle-thumb {
+      transform: translateX(1.55rem);
+    }
+
+    @media (max-width: 419px) {
+      #themeToggle {
+        width: 2.5rem;
+        justify-content: center;
+        border-radius: 8px;
+        padding: 0;
+      }
+
+      #themeToggle .theme-toggle-thumb,
+      .dark #themeToggle .theme-toggle-thumb {
+        height: auto;
+        width: auto;
+        transform: none;
+        background: transparent;
+        box-shadow: none;
+      }
+    }
+
+    .mobile-overlay {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 220ms ease;
+    }
+
+    body.mobile-sidebar-open .mobile-overlay {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    @media (max-width: 1023px) {
+      .sidebar {
+        width: min(88vw, 20rem);
+        transform: translateX(-110%);
+      }
+
+      body.mobile-sidebar-open .sidebar {
+        transform: translateX(0);
+      }
+
+      body[data-sidebar="collapsed"] .sidebar {
+        width: min(88vw, 20rem);
+      }
+
+      body[data-sidebar="collapsed"] .sidebar-label,
+      body[data-sidebar="collapsed"] .sidebar-meta,
+      body[data-sidebar="collapsed"] .sidebar-title {
+        display: inline;
+      }
+
+      body[data-sidebar="collapsed"] .sidebar-link,
+      body[data-sidebar="collapsed"] .sidebar-logo {
+        justify-content: flex-start;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 1ms !important;
+        scroll-behavior: auto !important;
+        transition-duration: 1ms !important;
+      }
+    }
+  </style>
+</head>
+<body data-sidebar="expanded">
+  <div class="mobile-overlay fixed inset-0 z-30 bg-black/35 lg:hidden" id="mobileOverlay"></div>
+
+  <div class="app-shell lg:flex">
+    <aside class="sidebar glass-panel fixed inset-y-0 left-0 z-40 flex flex-col border-y-0 border-l-0 p-4 ">
+      <div class="sidebar-logo mb-6 flex items-center gap-3">
+        <div class="grid h-11 w-11 place-items-center rounded-lg bg-gradient-to-br from-blue-600 via-violet-600 to-emerald-500 text-white shadow-lg">
+          <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 19.5V6.8A2.8 2.8 0 0 1 6.8 4H20v14H6.8A2.8 2.8 0 0 0 4 20.8" />
+            <path d="M8 8h8M8 12h6" />
+          </svg>
+        </div>
+        <div class="sidebar-title min-w-0">
+          <p class="text-lg font-black">StudyFlow</p>
+          <p class="sidebar-meta text-xs muted-text">Student dashboard</p>
+        </div>
+      </div>
+
+      <nav class="space-y-1" aria-label="Primary">
+        <a href="#dashboard" class="sidebar-link active" data-nav-link>
+          <svg viewBox="0 0 24 24" class="h-5 w-5 flex-none" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 13h7V4H4v9Zm9 7h7V4h-7v16ZM4 20h7v-5H4v5Z" /></svg>
+          <span class="sidebar-label font-semibold">Dashboard</span>
+        </a>
+        <a href="#subjects" class="sidebar-link" data-nav-link>
+          <svg viewBox="0 0 24 24" class="h-5 w-5 flex-none" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h9a4 4 0 0 1 4 4v12H8a3 3 0 0 1-3-3V4Z" /><path d="M8 8h7M8 12h6" /></svg>
+          <span class="sidebar-label font-semibold">Subjects</span>
+        </a>
+        <a href="#tasks" class="sidebar-link" data-nav-link>
+          <svg viewBox="0 0 24 24" class="h-5 w-5 flex-none" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 4 4L19 6" /><path d="M5 20h14" /></svg>
+          <span class="sidebar-label font-semibold">Tasks</span>
+        </a>
+        <a href="#planner" class="sidebar-link" data-nav-link>
+          <svg viewBox="0 0 24 24" class="h-5 w-5 flex-none" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 3v3M17 3v3M4 8h16M6 5h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" /></svg>
+          <span class="sidebar-label font-semibold">Planner</span>
+        </a>
+        <a href="#statistics" class="sidebar-link" data-nav-link>
+          <svg viewBox="0 0 24 24" class="h-5 w-5 flex-none" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 19V9M12 19V5M19 19v-7" /><path d="M3 19h18" /></svg>
+          <span class="sidebar-label font-semibold">Statistics</span>
+        </a>
+        <a href="#notes" class="sidebar-link" data-nav-link>
+          <svg viewBox="0 0 24 24" class="h-5 w-5 flex-none" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l3 3v15H6V3Z" /><path d="M14 3v4h4M9 12h6M9 16h5" /></svg>
+          <span class="sidebar-label font-semibold">Notes</span>
+        </a>
+        <a href="#settings" class="sidebar-link" data-nav-link>
+          <svg viewBox="0 0 24 24" class="h-5 w-5 flex-none" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z" /><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.05.05a2 2 0 1 1-2.83 2.83l-.05-.05A1.7 1.7 0 0 0 15 19.37a1.7 1.7 0 0 0-1 .57 1.7 1.7 0 0 0-.43 1.06V21a2 2 0 1 1-4 0v-.08a1.7 1.7 0 0 0-.43-1.06 1.7 1.7 0 0 0-1-.57 1.7 1.7 0 0 0-1.88.34l-.05.05a2 2 0 1 1-2.83-2.83l.05-.05A1.7 1.7 0 0 0 3.63 15a1.7 1.7 0 0 0-.57-1A1.7 1.7 0 0 0 2 13.57H2a2 2 0 1 1 0-4h.08a1.7 1.7 0 0 0 1.06-.43 1.7 1.7 0 0 0 .57-1A1.7 1.7 0 0 0 3.37 6.3l-.05-.05a2 2 0 1 1 2.83-2.83l.05.05A1.7 1.7 0 0 0 8 3.63a1.7 1.7 0 0 0 1-.57A1.7 1.7 0 0 0 9.43 2V2a2 2 0 1 1 4 0v.08a1.7 1.7 0 0 0 .43 1.06 1.7 1.7 0 0 0 1 .57 1.7 1.7 0 0 0 1.88-.34l.05-.05a2 2 0 1 1 2.83 2.83l-.05.05A1.7 1.7 0 0 0 19.37 8c.08.38.28.72.57 1 .3.28.68.43 1.06.43H21a2 2 0 1 1 0 4h-.08a1.7 1.7 0 0 0-1.06.43c-.29.28-.49.62-.57 1Z" /></svg>
+          <span class="sidebar-label font-semibold">Settings</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-meta mt-auto rounded-lg border p-3 text-sm" style="border-color: var(--border); background: var(--input);">
+        <p class="font-bold">Next level</p>
+        <p class="muted-text mt-1" id="sidebarLevelHint">Earn XP by finishing work.</p>
+      </div>
+    </aside>
+
+    <main class="min-w-0 flex-1 lg:pl-0 lg:ml-[17.5rem] transition-all duration-300">
+      <header class="sticky top-0 z-20 border-b px-4 py-3 backdrop-blur-xl sm:px-6 lg:px-8" style="border-color: var(--border); background: color-mix(in srgb, var(--bg) 82%, transparent);">
+        <div class="mx-auto flex min-w-0 max-w-[1440px] items-center gap-3">
+          <button class="icon-btn lg:hidden" id="mobileMenuButton" title="Open menu" aria-label="Open menu">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+          </button>
+          <button class="icon-btn hidden lg:inline-flex" id="sidebarToggle" title="Collapse sidebar" aria-label="Collapse sidebar">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h10M4 18h16" /></svg>
+          </button>
+
+          <div class="hidden min-w-0 items-center gap-3 sm:flex">
+            <div class="grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-br from-blue-600 to-emerald-500 text-white">
+              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5V5a2 2 0 0 1 2-2h14v16H6a2 2 0 0 0-2 2Z" /></svg>
+            </div>
+            <div class="min-w-0">
+              <p class="text-sm font-black leading-4">StudyFlow</p>
+              <p class="text-xs muted-text">Focus workspace</p>
+            </div>
+          </div>
+
+          <div class="relative ml-auto w-0 min-w-0 flex-1 sm:max-w-lg">
+            <svg viewBox="0 0 24 24" class="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 muted-text" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.35-4.35" /><circle cx="10.5" cy="10.5" r="6.5" /></svg>
+            <input id="globalSearch" class="form-field h-11 pl-10" type="search" placeholder="Search">
+          </div>
+
+          <button class="inline-flex h-10 w-[4.6rem] items-center rounded-full border p-1" id="themeToggle" title="Toggle theme" aria-label="Toggle theme" style="border-color: var(--border); background: var(--input);">
+            <span class="theme-toggle-thumb grid h-8 w-8 place-items-center rounded-full bg-white text-zinc-900 shadow-md dark:bg-zinc-700 dark:text-white">
+              <svg id="themeIcon" viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v2M12 19v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M3 12h2M19 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" /><circle cx="12" cy="12" r="4" /></svg>
+            </span>
+          </button>
+
+          <button class="icon-btn hidden xs:inline-flex" title="Notifications" aria-label="Notifications">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" /><path d="M10 21h4" /></svg>
+          </button>
+          <div class="hidden h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-orange-400 to-pink-500 text-sm font-black text-white shadow-md sm:grid" title="Profile">AS</div>
+        </div>
+      </header>
+
+      <div class="mx-auto max-w-[1440px] space-y-6 px-4 py-5 sm:px-6 lg:px-8">
+        <section id="dashboard" class="grid gap-5 xl:grid-cols-[1.5fr_0.9fr]">
+          <div class="glass-panel section-card fade-up overflow-hidden">
+            <div class="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+              <div class="max-w-2xl">
+                <p class="mb-2 text-sm font-bold muted-text" id="todayDate">Today</p>
+                <h1 class="text-3xl font-black leading-tight sm:text-4xl" id="greetingTitle">Good Morning <span aria-hidden="true">&#128075;</span></h1>
+                <p class="mt-3 text-base muted-text" id="dailyQuote">Small steps compound into confident progress.</p>
+              </div>
+              <div class="grid w-full grid-cols-1 gap-3 xs:grid-cols-2 sm:flex md:w-auto">
+                <button class="primary-btn" data-quick="task">
+                  <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" /></svg>
+                  Add Task
+                </button>
+                <button class="soft-btn" data-quick="focus">
+                  <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v5l3 2" /><circle cx="12" cy="12" r="9" /></svg>
+                  Focus
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="solid-panel section-card fade-up" style="animation-delay: 80ms;">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <p class="text-sm font-bold muted-text">Motivation</p>
+                <h2 class="mt-1 text-xl font-black">Today&apos;s spark</h2>
+              </div>
+              <span class="grid h-11 w-11 place-items-center rounded-lg bg-orange-500/12 text-orange-500">
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 4 14h7l-1 8 10-13h-7l0-7Z" /></svg>
+              </span>
+            </div>
+            <p class="mt-5 text-lg font-semibold leading-relaxed" id="motivationCard">Discipline turns intention into momentum.</p>
+          </div>
+        </section>
+
+        <section id="statistics" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Statistics cards">
+          <article class="stat-card solid-panel section-card fade-up" style="animation-delay: 40ms;">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <p class="text-sm font-bold muted-text">Subjects</p>
+                <p class="mt-2 text-3xl font-black" data-counter="subjects">0</p>
+                <p class="mt-1 text-sm muted-text">active learning tracks</p>
+              </div>
+              <span class="grid h-11 w-11 place-items-center rounded-lg bg-blue-500/12 text-blue-500">
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h14v16H7a2 2 0 0 1-2-2V4Z" /><path d="M9 8h6M9 12h5" /></svg>
+              </span>
+            </div>
+          </article>
+          <article class="stat-card solid-panel section-card fade-up" style="animation-delay: 80ms;">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <p class="text-sm font-bold muted-text">Tasks Completed</p>
+                <p class="mt-2 text-3xl font-black" data-counter="completed">0</p>
+                <p class="mt-1 text-sm muted-text">finished this workspace</p>
+              </div>
+              <span class="grid h-11 w-11 place-items-center rounded-lg bg-emerald-500/12 text-emerald-500">
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 4 4L19 6" /></svg>
+              </span>
+            </div>
+          </article>
+          <article class="stat-card solid-panel section-card fade-up" style="animation-delay: 120ms;">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <p class="text-sm font-bold muted-text">Pending Tasks</p>
+                <p class="mt-2 text-3xl font-black" data-counter="pending">0</p>
+                <p class="mt-1 text-sm muted-text">waiting for attention</p>
+              </div>
+              <span class="grid h-11 w-11 place-items-center rounded-lg bg-amber-500/14 text-amber-500">
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v5l3 2" /><circle cx="12" cy="12" r="9" /></svg>
+              </span>
+            </div>
+          </article>
+          <article class="stat-card solid-panel section-card fade-up" style="animation-delay: 160ms;">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <p class="text-sm font-bold muted-text">Study Streak</p>
+                <p class="mt-2 text-3xl font-black"><span data-counter="streak">0</span> days</p>
+                <p class="mt-1 text-sm muted-text">current consistency</p>
+              </div>
+              <span class="grid h-11 w-11 place-items-center rounded-lg bg-rose-500/12 text-rose-500">
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3s5 4 5 9a5 5 0 0 1-10 0c0-2 1-4 3-6 0 3 2 4 2 4s2-2 0-7Z" /></svg>
+              </span>
+            </div>
+          </article>
+        </section>
+
+        <section class="grid gap-5 xl:grid-cols-[1fr_1fr]">
+          <article id="planner" class="solid-panel section-card fade-up">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p class="text-sm font-bold muted-text">Today&apos;s Planner</p>
+                <h2 class="mt-1 text-2xl font-black">Timeline</h2>
+              </div>
+              <span class="rounded-full bg-blue-500/10 px-3 py-1 text-sm font-bold text-blue-600 dark:text-blue-300" id="plannerCount">0 items</span>
+            </div>
+
+            <form id="plannerForm" class="mt-5 grid gap-3 sm:grid-cols-[8rem_1fr_auto]">
+              <label class="sr-only" for="plannerTime">Time</label>
+              <input id="plannerTime" class="form-field" type="time" required>
+              <label class="sr-only" for="plannerTitle">Schedule title</label>
+              <input id="plannerTitle" class="form-field" type="text" placeholder="Add schedule item" maxlength="60" required>
+              <button class="primary-btn" type="submit">
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" /></svg>
+                Add
+              </button>
+            </form>
+
+            <div id="plannerList" class="mt-5 space-y-3" aria-live="polite"></div>
+          </article>
+
+          <article class="solid-panel section-card fade-up" id="goal" style="animation-delay: 80ms;">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p class="text-sm font-bold muted-text">Daily Goal</p>
+                <h2 class="mt-1 text-2xl font-black">Study Goal</h2>
+              </div>
+              <div class="flex items-center gap-2">
+                <input id="goalHoursInput" class="form-field h-10 w-24 py-1 text-center font-bold" type="number" min="0.5" max="24" step="0.5" aria-label="Goal hours">
+                <button class="soft-btn h-10 px-3 py-1" id="saveGoalButton" type="button">Save</button>
+              </div>
+            </div>
+
+            <div class="mt-6">
+              <div class="flex items-end justify-between gap-3">
+                <div>
+                  <p class="text-4xl font-black" id="goalProgressText">0 / 5 Hours</p>
+                  <p class="mt-2 text-sm muted-text">Focus time completed today</p>
+                </div>
+                <span class="grid h-14 w-14 place-items-center rounded-lg bg-emerald-500/12 text-emerald-500">
+                  <svg viewBox="0 0 24 24" class="h-7 w-7" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10" /><path d="M18 20V4" /><path d="M6 20v-6" /></svg>
+                </span>
+              </div>
+              <div class="progress-track mt-5">
+                <div class="progress-fill" id="goalProgressBar"></div>
+              </div>
+            </div>
+
+            <div class="mt-6 grid gap-3 sm:grid-cols-3">
+              <div class="rounded-lg border p-4" style="border-color: var(--border);">
+                <p class="text-sm font-bold muted-text">Sessions</p>
+                <p class="mt-1 text-2xl font-black" id="goalSessions">0</p>
+              </div>
+              <div class="rounded-lg border p-4" style="border-color: var(--border);">
+                <p class="text-sm font-bold muted-text">Focus Time</p>
+                <p class="mt-1 text-2xl font-black" id="focusTimeStat">0m</p>
+              </div>
+              <div class="rounded-lg border p-4" style="border-color: var(--border);">
+                <p class="text-sm font-bold muted-text">Completion</p>
+                <p class="mt-1 text-2xl font-black" id="goalPercent">0%</p>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <section id="tasks" class="solid-panel section-card fade-up">
+          <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+            <div>
+              <p class="text-sm font-bold muted-text">Task Manager</p>
+              <h2 class="mt-1 text-2xl font-black">Plan, finish, repeat</h2>
+            </div>
+            <div class="flex flex-col gap-3 sm:flex-row">
+              <div class="relative">
+                <svg viewBox="0 0 24 24" class="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 muted-text" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.35-4.35" /><circle cx="10.5" cy="10.5" r="6.5" /></svg>
+                <input id="taskSearch" class="form-field h-11 pl-10 sm:w-64" type="search" placeholder="Search tasks">
+              </div>
+              <select id="taskFilter" class="form-field h-11 sm:w-44" aria-label="Filter tasks">
+                <option value="all">All tasks</option>
+                <option value="pending">Pending</option>
+                <option value="completed">Completed</option>
+                <option value="High">High priority</option>
+                <option value="Medium">Medium priority</option>
+                <option value="Low">Low priority</option>
+              </select>
+            </div>
+          </div>
+
+          <form id="taskForm" class="mt-5 grid gap-3 lg:grid-cols-[1fr_10rem_11rem_auto]">
+            <input type="hidden" id="taskEditingId">
+            <label class="sr-only" for="taskTitle">Task title</label>
+            <input id="taskTitle" class="form-field" type="text" placeholder="Add a study task" maxlength="80" required>
+            <label class="sr-only" for="taskPriority">Priority</label>
+            <select id="taskPriority" class="form-field" required>
+              <option value="Low">Low</option>
+              <option value="Medium" selected>Medium</option>
+              <option value="High">High</option>
+            </select>
+            <label class="sr-only" for="taskDueDate">Due date</label>
+            <input id="taskDueDate" class="form-field" type="date" required>
+            <button class="primary-btn" id="taskSubmitButton" type="submit">
+              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" /></svg>
+              Add Task
+            </button>
+          </form>
+
+          <div class="mt-6">
+            <div class="flex items-center justify-between gap-3">
+              <p class="text-sm font-bold muted-text" id="taskProgressLabel">0 of 0 complete</p>
+              <p class="text-sm font-black" id="taskProgressPercent">0%</p>
+            </div>
+            <div class="progress-track mt-2">
+              <div class="progress-fill" id="taskProgressBar"></div>
+            </div>
+          </div>
+
+          <div id="taskList" class="mt-5 grid gap-3" aria-live="polite"></div>
+        </section>
+
+        <section class="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
+          <article id="streak" class="solid-panel section-card fade-up">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <p class="text-sm font-bold muted-text">Study Streak</p>
+                <h2 class="mt-1 text-2xl font-black">Snap-style consistency</h2>
+              </div>
+              <span class="grid h-12 w-12 place-items-center rounded-lg bg-rose-500/12 text-rose-500">
+                <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3s5 4 5 9a5 5 0 0 1-10 0c0-2 1-4 3-6 0 3 2 4 2 4s2-2 0-7Z" /></svg>
+              </span>
+            </div>
+            <div class="mt-6 grid gap-3 sm:grid-cols-3">
+              <div class="rounded-lg border p-4" style="border-color: var(--border); background: var(--input);">
+                <p class="text-sm font-bold muted-text">Badge</p>
+                <p class="mt-2 text-2xl font-black"><span aria-hidden="true">&#128293;</span> <span id="streakDays">0</span> Day Streak</p>
+              </div>
+              <div class="rounded-lg border p-4" style="border-color: var(--border); background: var(--input);">
+                <p class="text-sm font-bold muted-text">Longest</p>
+                <p class="mt-2 text-2xl font-black" id="longestStreak">0 days</p>
+              </div>
+              <div class="rounded-lg border p-4" style="border-color: var(--border); background: var(--input);">
+                <p class="text-sm font-bold muted-text">Today</p>
+                <p class="mt-2 text-lg font-black" id="streakStatus">Pending</p>
+              </div>
+            </div>
+          </article>
+
+          <article class="solid-panel section-card fade-up" id="xp" style="animation-delay: 80ms;">
+            <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <div>
+                <p class="text-sm font-bold muted-text">XP &amp; Level System</p>
+                <h2 class="mt-1 text-2xl font-black" id="levelName">Beginner</h2>
+              </div>
+              <span class="rounded-full bg-violet-500/12 px-3 py-1 text-sm font-black text-violet-600 dark:text-violet-300" id="xpTotal">0 XP</span>
+            </div>
+            <div class="mt-5">
+              <div class="flex items-center justify-between gap-3 text-sm">
+                <span class="font-bold muted-text" id="levelRange">0 / 50 XP</span>
+                <span class="font-black" id="levelPercent">0%</span>
+              </div>
+              <div class="progress-track mt-2">
+                <div class="progress-fill" id="xpProgressBar"></div>
+              </div>
+            </div>
+            <div class="mt-5 flex flex-wrap gap-2" id="levelBadges"></div>
+          </article>
+        </section>
+
+        <section class="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
+          <article class="solid-panel section-card fade-up" id="pomodoro">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p class="text-sm font-bold muted-text">Pomodoro Timer</p>
+                <h2 class="mt-1 text-2xl font-black">Focus session</h2>
+              </div>
+              <div class="flex items-center gap-2">
+                <input id="customMinutes" class="form-field h-10 w-24 py-1 text-center font-bold" type="number" min="1" max="180" step="1" aria-label="Custom minutes">
+                <span class="text-sm font-bold muted-text">min</span>
+              </div>
+            </div>
+
+            <div class="mt-6 grid gap-6 md:grid-cols-[auto_1fr] md:items-center">
+              <div class="mx-auto md:mx-0">
+                <div class="timer-ring" id="timerRing">
+                  <span class="text-4xl font-black" id="timerDisplay">25:00</span>
+                </div>
+              </div>
+              <div>
+                <div class="grid grid-cols-3 gap-2">
+                  <button class="primary-btn px-3" id="startTimer" type="button">Start</button>
+                  <button class="soft-btn px-3" id="pauseTimer" type="button">Pause</button>
+                  <button class="soft-btn px-3" id="resetTimer" type="button">Reset</button>
+                </div>
+                <div class="mt-5 grid gap-3 sm:grid-cols-2">
+                  <div class="rounded-lg border p-4" style="border-color: var(--border);">
+                    <p class="text-sm font-bold muted-text">Today&apos;s Focus Sessions</p>
+                    <p class="mt-1 text-3xl font-black" id="focusSessions">0</p>
+                  </div>
+                  <div class="rounded-lg border p-4" style="border-color: var(--border);">
+                    <p class="text-sm font-bold muted-text">Focus Time</p>
+                    <p class="mt-1 text-3xl font-black" id="focusMinutes">0m</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article id="notes" class="solid-panel section-card fade-up" style="animation-delay: 80ms;">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <p class="text-sm font-bold muted-text">Notes</p>
+                <h2 class="mt-1 text-2xl font-black">Quick Notes</h2>
+              </div>
+              <span class="rounded-full bg-emerald-500/12 px-3 py-1 text-sm font-bold text-emerald-600 dark:text-emerald-300" id="notesCount">0 notes</span>
+            </div>
+            <form id="noteForm" class="mt-5 grid gap-3">
+              <label class="sr-only" for="noteText">Note</label>
+              <textarea id="noteText" class="form-field min-h-24 resize-y" placeholder="Capture a quick thought, formula, or reminder" maxlength="360" required></textarea>
+              <div class="flex justify-end">
+                <button class="primary-btn" type="submit">
+                  <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" /></svg>
+                  Add Note
+                </button>
+              </div>
+            </form>
+            <div id="notesList" class="mt-5 grid gap-3"></div>
+          </article>
+        </section>
+
+        <section class="grid gap-5 xl:grid-cols-[1fr_1fr]">
+          <article class="solid-panel section-card fade-up">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <p class="text-sm font-bold muted-text">Weekly Progress</p>
+                <h2 class="mt-1 text-2xl font-black">Activity chart</h2>
+              </div>
+              <span class="grid h-12 w-12 place-items-center rounded-lg bg-blue-500/12 text-blue-500">
+                <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5M4 19h16M8 16v-5M12 16V8M16 16v-8" /></svg>
+              </span>
+            </div>
+            <div id="weeklyChart" class="mt-6 grid h-64 grid-cols-7 items-end gap-3"></div>
+          </article>
+
+          <article id="subjects" class="solid-panel section-card fade-up" style="animation-delay: 80ms;">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p class="text-sm font-bold muted-text">Subject Progress</p>
+                <h2 class="mt-1 text-2xl font-black">Learning tracks</h2>
+              </div>
+              <span class="rounded-full bg-blue-500/12 px-3 py-1 text-sm font-bold text-blue-600 dark:text-blue-300" id="subjectCount">0 subjects</span>
+            </div>
+            <form id="subjectForm" class="mt-5 grid gap-3 sm:grid-cols-[1fr_8rem_auto]">
+              <label class="sr-only" for="subjectName">Subject name</label>
+              <input id="subjectName" class="form-field" type="text" placeholder="Add subject" maxlength="42" required>
+              <label class="sr-only" for="subjectProgress">Progress</label>
+              <input id="subjectProgress" class="form-field" type="number" min="0" max="100" value="50" required>
+              <button class="primary-btn" type="submit">
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" /></svg>
+                Add
+              </button>
+            </form>
+            <div id="subjectList" class="mt-5 grid gap-4"></div>
+          </article>
+        </section>
+
+        <section class="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
+          <article class="solid-panel section-card fade-up">
+            <div>
+              <p class="text-sm font-bold muted-text">Quick Actions</p>
+              <h2 class="mt-1 text-2xl font-black">Move fast</h2>
+            </div>
+            <div class="mt-5 grid gap-3 sm:grid-cols-2">
+              <button class="quick-action soft-btn justify-start p-4" data-quick="task">
+                <span class="grid h-10 w-10 place-items-center rounded-lg bg-blue-500/12 text-blue-500">
+                  <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" /></svg>
+                </span>
+                Add Task
+              </button>
+              <button class="quick-action soft-btn justify-start p-4" data-quick="subject">
+                <span class="grid h-10 w-10 place-items-center rounded-lg bg-emerald-500/12 text-emerald-500">
+                  <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5V5a2 2 0 0 1 2-2h14v16H6a2 2 0 0 0-2 2Z" /></svg>
+                </span>
+                Add Subject
+              </button>
+              <button class="quick-action soft-btn justify-start p-4" data-quick="focus">
+                <span class="grid h-10 w-10 place-items-center rounded-lg bg-orange-500/12 text-orange-500">
+                  <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v5l3 2" /><circle cx="12" cy="12" r="9" /></svg>
+                </span>
+                Start Focus
+              </button>
+              <button class="quick-action soft-btn justify-start p-4" data-quick="note">
+                <span class="grid h-10 w-10 place-items-center rounded-lg bg-violet-500/12 text-violet-500">
+                  <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l3 3v15H6V3Z" /><path d="M9 12h6M9 16h5" /></svg>
+                </span>
+                Add Note
+              </button>
+            </div>
+          </article>
+
+          <article class="solid-panel section-card fade-up" style="animation-delay: 80ms;">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <p class="text-sm font-bold muted-text">Achievement Badges</p>
+                <h2 class="mt-1 text-2xl font-black">Unlocked wins</h2>
+              </div>
+              <span class="grid h-12 w-12 place-items-center rounded-lg bg-amber-500/12 text-amber-500">
+                <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4Z" /><path d="M5 6H3v1a4 4 0 0 0 4 4M19 6h2v1a4 4 0 0 1-4 4" /></svg>
+              </span>
+            </div>
+            <div id="achievementGrid" class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3"></div>
+          </article>
+        </section>
+
+        <section id="settings" class="solid-panel section-card fade-up mb-8">
+          <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p class="text-sm font-bold muted-text">Settings</p>
+              <h2 class="mt-1 text-2xl font-black">Local workspace</h2>
+              <p class="mt-2 muted-text">Your dashboard data is saved in this browser with Local Storage.</p>
+            </div>
+            <div class="flex flex-wrap gap-3">
+              <button class="danger-btn" id="resetDataButton" type="button">
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18" /><path d="M8 6V4h8v2M19 6l-1 14H6L5 6" /></svg>
+                Reset Data
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const STORE_KEY = "studyflow.dashboard.v1";
+    const THEME_KEY = "studyflow.theme";
+    const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const quotes = [
+      "Tiny improvements become obvious results when you repeat them.",
+      "Focus on the next useful action, not the whole mountain.",
+      "A calm plan beats a crowded mind.",
+      "Study until the idea feels friendly.",
+      "Consistency is a quiet kind of confidence.",
+      "Make progress easy enough to begin and meaningful enough to repeat.",
+      "Your future self notices what you practice today."
+    ];
+    const levels = [
+      { name: "Beginner", xp: 0 },
+      { name: "Learner", xp: 50 },
+      { name: "Scholar", xp: 150 },
+      { name: "Master", xp: 300 },
+      { name: "Legend", xp: 500 }
+    ];
+    const badgeDefinitions = [
+      { id: "first-task", title: "First Task", detail: "Create your first task", isUnlocked: state => state.statistics.tasksCreated >= 1 },
+      { id: "ten-tasks", title: "10 Tasks", detail: "Complete 10 tasks", isUnlocked: state => state.statistics.totalTasksCompleted >= 10 },
+      { id: "seven-streak", title: "7-Day Streak", detail: "Reach a 7 day streak", isUnlocked: state => state.streak.longest >= 7 },
+      { id: "xp-50", title: "50 XP", detail: "Earn 50 XP", isUnlocked: state => state.xp >= 50 },
+      { id: "xp-100", title: "100 XP", detail: "Earn 100 XP", isUnlocked: state => state.xp >= 100 }
+    ];
+
+    let state = loadState();
+    let timer = {
+      interval: null,
+      running: false,
+      totalSeconds: state.pomodoroSettings.minutes * 60,
+      remainingSeconds: state.pomodoroSettings.minutes * 60
+    };
+
+    const $ = selector => document.querySelector(selector);
+    const $$ = selector => Array.from(document.querySelectorAll(selector));
+
+    const els = {
+      todayDate: $("#todayDate"),
+      greetingTitle: $("#greetingTitle"),
+      dailyQuote: $("#dailyQuote"),
+      motivationCard: $("#motivationCard"),
+      plannerForm: $("#plannerForm"),
+      plannerTime: $("#plannerTime"),
+      plannerTitle: $("#plannerTitle"),
+      plannerList: $("#plannerList"),
+      plannerCount: $("#plannerCount"),
+      taskForm: $("#taskForm"),
+      taskTitle: $("#taskTitle"),
+      taskPriority: $("#taskPriority"),
+      taskDueDate: $("#taskDueDate"),
+      taskEditingId: $("#taskEditingId"),
+      taskSubmitButton: $("#taskSubmitButton"),
+      taskSearch: $("#taskSearch"),
+      taskFilter: $("#taskFilter"),
+      taskList: $("#taskList"),
+      taskProgressLabel: $("#taskProgressLabel"),
+      taskProgressPercent: $("#taskProgressPercent"),
+      taskProgressBar: $("#taskProgressBar"),
+      goalHoursInput: $("#goalHoursInput"),
+      saveGoalButton: $("#saveGoalButton"),
+      goalProgressText: $("#goalProgressText"),
+      goalProgressBar: $("#goalProgressBar"),
+      goalSessions: $("#goalSessions"),
+      focusTimeStat: $("#focusTimeStat"),
+      goalPercent: $("#goalPercent"),
+      streakDays: $("#streakDays"),
+      longestStreak: $("#longestStreak"),
+      streakStatus: $("#streakStatus"),
+      levelName: $("#levelName"),
+      xpTotal: $("#xpTotal"),
+      levelRange: $("#levelRange"),
+      levelPercent: $("#levelPercent"),
+      xpProgressBar: $("#xpProgressBar"),
+      levelBadges: $("#levelBadges"),
+      sidebarLevelHint: $("#sidebarLevelHint"),
+      customMinutes: $("#customMinutes"),
+      timerRing: $("#timerRing"),
+      timerDisplay: $("#timerDisplay"),
+      focusSessions: $("#focusSessions"),
+      focusMinutes: $("#focusMinutes"),
+      noteForm: $("#noteForm"),
+      noteText: $("#noteText"),
+      notesList: $("#notesList"),
+      notesCount: $("#notesCount"),
+      weeklyChart: $("#weeklyChart"),
+      subjectForm: $("#subjectForm"),
+      subjectName: $("#subjectName"),
+      subjectProgress: $("#subjectProgress"),
+      subjectList: $("#subjectList"),
+      subjectCount: $("#subjectCount"),
+      achievementGrid: $("#achievementGrid"),
+      themeToggle: $("#themeToggle"),
+      themeIcon: $("#themeIcon"),
+      globalSearch: $("#globalSearch"),
+      mobileMenuButton: $("#mobileMenuButton"),
+      mobileOverlay: $("#mobileOverlay"),
+      sidebarToggle: $("#sidebarToggle"),
+      startTimer: $("#startTimer"),
+      pauseTimer: $("#pauseTimer"),
+      resetTimer: $("#resetTimer"),
+      resetDataButton: $("#resetDataButton"),
+      exportButton: $("#exportButton")
+    };
+
+    function createDefaultState() {
+      const today = localDateKey();
+      return {
+        tasks: [
+
+          ],
+        planner: [
+         
+        ],
+        subjects: [
+          
+        ],
+        notes: [
+          { id: makeId("note"), text: "Turn tricky topics into short recall questions.", createdAt: Date.now() }
+        ],
+        dailyGoal: { hours: 5 },
+        xp: 0,
+        streak: { current: 0, longest: 0, lastCompletionDate: null, status: "Pending" },
+        statistics: { tasksCreated: 3, totalTasksCompleted: 1 },
+        pomodoro: { date: today, sessions: 0, minutes: 0 },
+        pomodoroSettings: { minutes: 25 },
+        weeklyProgress: { weekStart: weekStartKey(), values: [0, 0, 0, 0, 0, 0, 0] }
+      };
+    }
+
+    function loadState() {
+      const fallback = createDefaultState();
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORE_KEY));
+        if (!saved) return fallback;
+        const merged = {
+          ...fallback,
+          ...saved,
+          dailyGoal: { ...fallback.dailyGoal, ...(saved.dailyGoal || {}) },
+          streak: { ...fallback.streak, ...(saved.streak || {}) },
+          statistics: { ...fallback.statistics, ...(saved.statistics || {}) },
+          pomodoro: { ...fallback.pomodoro, ...(saved.pomodoro || {}) },
+          pomodoroSettings: { ...fallback.pomodoroSettings, ...(saved.pomodoroSettings || {}) },
+          weeklyProgress: { ...fallback.weeklyProgress, ...(saved.weeklyProgress || {}) }
+        };
+        return normalizeState(merged);
+      } catch (error) {
+        return fallback;
+      }
+    }
+
+    function normalizeState(nextState) {
+      const today = localDateKey();
+      if (nextState.pomodoro.date !== today) {
+        nextState.pomodoro = { date: today, sessions: 0, minutes: 0 };
+      }
+      if (nextState.weeklyProgress.weekStart !== weekStartKey()) {
+        nextState.weeklyProgress = { weekStart: weekStartKey(), values: [0, 0, 0, 0, 0, 0, 0] };
+      }
+      nextState.tasks = (nextState.tasks || []).map(task => ({ awarded: false, completed: false, priority: "Medium", dueDate: today, ...task }));
+      nextState.planner = (nextState.planner || []).map(item => ({ done: false, awarded: false, ...item }));
+      nextState.subjects = nextState.subjects || [];
+      nextState.notes = nextState.notes || [];
+      nextState.xp = Number(nextState.xp) || 0;
+      nextState.dailyGoal.hours = clamp(Number(nextState.dailyGoal.hours) || 5, 0.5, 24);
+      nextState.pomodoroSettings.minutes = clamp(Number(nextState.pomodoroSettings.minutes) || 25, 1, 180);
+      refreshStreakStatus(nextState);
+      return nextState;
+    }
+
+    function saveState() {
+      localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    }
+
+    function makeId(prefix) {
+      return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    }
+
+    function localDateKey(date = new Date()) {
+      const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+      return localDate.toISOString().slice(0, 10);
+    }
+
+    function weekStartKey(date = new Date()) {
+      const start = new Date(date);
+      const day = (start.getDay() + 6) % 7;
+      start.setDate(start.getDate() - day);
+      return localDateKey(start);
+    }
+
+    function yesterdayKey() {
+      const date = new Date();
+      date.setDate(date.getDate() - 1);
+      return localDateKey(date);
+    }
+
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function formatTime(timeValue) {
+      if (!timeValue) return "";
+      const [hour, minute] = timeValue.split(":").map(Number);
+      const date = new Date();
+      date.setHours(hour, minute, 0, 0);
+      return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    }
+
+    function currentWeekdayIndex() {
+      return (new Date().getDay() + 6) % 7;
+    }
+
+    function addWeeklyPoint(amount = 1) {
+      state.weeklyProgress.values[currentWeekdayIndex()] += amount;
+    }
+
+    function addXp(amount) {
+      state.xp += amount;
+    }
+
+    function getLevelInfo() {
+      let current = levels[0];
+      let next = null;
+      for (let index = 0; index < levels.length; index += 1) {
+        if (state.xp >= levels[index].xp) {
+          current = levels[index];
+          next = levels[index + 1] || null;
+        }
+      }
+      const start = current.xp;
+      const end = next ? next.xp : Math.max(state.xp, current.xp + 1);
+      const progress = next ? ((state.xp - start) / (end - start)) * 100 : 100;
+      return { current, next, start, end, progress: clamp(progress, 0, 100) };
+    }
+
+    function dailyTasks() {
+      const today = localDateKey();
+      return state.tasks.filter(task => task.dueDate === today);
+    }
+
+    function allDailyTasksComplete() {
+      const tasks = dailyTasks();
+      return tasks.length > 0 && tasks.every(task => task.completed);
+    }
+
+    function refreshStreakStatus(targetState = state) {
+      const today = localDateKey();
+      const yesterday = yesterdayKey();
+      const last = targetState.streak.lastCompletionDate;
+      const todaysTasks = (targetState.tasks || []).filter(task => task.dueDate === today);
+
+      if (last === today) {
+        targetState.streak.status = "Completed today";
+      } else if (todaysTasks.length === 0) {
+        targetState.streak.status = "No tasks due";
+      } else if (last && last < yesterday) {
+        targetState.streak.status = "Paused";
+      } else {
+        targetState.streak.status = "In progress";
+      }
+    }
+
+    function maybeAdvanceStreak() {
+      const today = localDateKey();
+      if (allDailyTasksComplete() && state.streak.lastCompletionDate !== today) {
+        state.streak.current += 1;
+        state.streak.lastCompletionDate = today;
+        state.streak.longest = Math.max(state.streak.longest, state.streak.current);
+        state.streak.status = "Completed today";
+        addXp(20);
+        addWeeklyPoint(1);
+      } else {
+        refreshStreakStatus();
+      }
+    }
+
+    function renderAll() {
+      renderGreeting();
+      renderStats();
+      renderPlanner();
+      renderTasks();
+      renderGoal();
+      renderStreak();
+      renderXp();
+      renderAchievements();
+      renderPomodoro();
+      renderNotes();
+      renderWeeklyChart();
+      renderSubjects();
+      updateThemeIcon();
+      saveState();
+    }
+
+    function renderGreeting() {
+      const now = new Date();
+      const hour = now.getHours();
+      const greeting = hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
+      const quote = sessionStorage.getItem("studyflow.quote") || quotes[Math.floor(Math.random() * quotes.length)];
+      sessionStorage.setItem("studyflow.quote", quote);
+      els.greetingTitle.innerHTML = `${greeting} <span aria-hidden="true">&#128075;</span>`;
+      els.todayDate.textContent = now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+      els.dailyQuote.textContent = quote;
+      els.motivationCard.textContent = quote;
+    }
+
+    function animateCounter(element, value) {
+      const target = Number(value) || 0;
+      const start = Number(element.dataset.value || 0);
+      const duration = 520;
+      const startTime = performance.now();
+      element.dataset.value = target;
+
+      function tick(now) {
+        const progress = clamp((now - startTime) / duration, 0, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        element.textContent = Math.round(start + (target - start) * eased);
+        if (progress < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    function renderStats() {
+      const completed = state.tasks.filter(task => task.completed).length;
+      const pending = state.tasks.length - completed;
+      animateCounter($('[data-counter="subjects"]'), state.subjects.length);
+      animateCounter($('[data-counter="completed"]'), completed);
+      animateCounter($('[data-counter="pending"]'), pending);
+      animateCounter($('[data-counter="streak"]'), state.streak.current);
+    }
+
+    function renderPlanner() {
+      const sorted = [...state.planner].sort((a, b) => a.time.localeCompare(b.time));
+      els.plannerCount.textContent = `${sorted.length} ${sorted.length === 1 ? "item" : "items"}`;
+      if (!sorted.length) {
+        els.plannerList.innerHTML = emptyState("No schedule yet", "Add your first study block to build today&apos;s rhythm.");
+        return;
+      }
+      els.plannerList.innerHTML = sorted.map(item => `
+        <div class="timeline-dot scale-in flex gap-3 rounded-lg border p-3" style="border-color: var(--border); background: var(--input);">
+          <button class="task-checkbox ${item.done ? "done" : ""}" data-planner-toggle="${item.id}" type="button" aria-label="Toggle planner item">
+            <svg viewBox="0 0 24 24" class="h-3.5 w-3.5 text-white" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 12 4 4L19 6" /></svg>
+          </button>
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="rounded-full bg-blue-500/10 px-2.5 py-1 text-xs font-black text-blue-600 dark:text-blue-300">${formatTime(item.time)}</span>
+              <p class="min-w-0 flex-1 font-bold ${item.done ? "line-through muted-text" : ""}">${escapeHtml(item.title)}</p>
+            </div>
+          </div>
+          <button class="icon-btn h-9 w-9" data-planner-delete="${item.id}" type="button" title="Delete schedule item" aria-label="Delete schedule item">
+            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" /></svg>
+          </button>
+        </div>
+      `).join("");
+    }
+
+    function renderTasks() {
+      const query = els.taskSearch.value.trim().toLowerCase();
+      const filter = els.taskFilter.value;
+      const completed = state.tasks.filter(task => task.completed).length;
+      const percent = state.tasks.length ? Math.round((completed / state.tasks.length) * 100) : 0;
+      els.taskProgressLabel.textContent = `${completed} of ${state.tasks.length} complete`;
+      els.taskProgressPercent.textContent = `${percent}%`;
+      els.taskProgressBar.style.width = `${percent}%`;
+
+      const filtered = state.tasks
+        .filter(task => !query || task.title.toLowerCase().includes(query))
+        .filter(task => {
+          if (filter === "pending") return !task.completed;
+          if (filter === "completed") return task.completed;
+          if (["Low", "Medium", "High"].includes(filter)) return task.priority === filter;
+          return true;
+        })
+        .sort((a, b) => Number(a.completed) - Number(b.completed) || new Date(a.dueDate) - new Date(b.dueDate));
+
+      if (!filtered.length) {
+        els.taskList.innerHTML = emptyState("No tasks match", "Add a task or adjust your search and filter.");
+        return;
+      }
+
+      els.taskList.innerHTML = filtered.map(task => `
+        <article class="scale-in flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center" style="border-color: var(--border); background: var(--input);">
+          <button class="task-checkbox ${task.completed ? "done" : ""}" data-task-toggle="${task.id}" type="button" aria-label="Complete task">
+            <svg viewBox="0 0 24 24" class="h-3.5 w-3.5 text-white" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 12 4 4L19 6" /></svg>
+          </button>
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-2">
+              <h3 class="min-w-0 font-black ${task.completed ? "line-through muted-text" : ""}">${escapeHtml(task.title)}</h3>
+              <span class="priority-${task.priority.toLowerCase()} rounded-full px-2.5 py-1 text-xs font-black">${task.priority}</span>
+            </div>
+            <p class="mt-1 text-sm muted-text">Due ${new Date(`${task.dueDate}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
+          </div>
+          <div class="flex gap-2 sm:flex-none">
+            <button class="icon-btn" data-task-edit="${task.id}" type="button" title="Edit task" aria-label="Edit task">
+              <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z" /></svg>
+            </button>
+            <button class="icon-btn" data-task-delete="${task.id}" type="button" title="Delete task" aria-label="Delete task">
+              <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" /></svg>
+            </button>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    function renderGoal() {
+      const hours = state.pomodoro.minutes / 60;
+      const target = state.dailyGoal.hours;
+      const percent = target ? clamp((hours / target) * 100, 0, 100) : 0;
+      els.goalHoursInput.value = target;
+      els.goalProgressText.textContent = `${formatHours(hours)} / ${formatHours(target)} Hours`;
+      els.goalProgressBar.style.width = `${percent}%`;
+      els.goalSessions.textContent = state.pomodoro.sessions;
+      els.focusTimeStat.textContent = formatMinutes(state.pomodoro.minutes);
+      els.goalPercent.textContent = `${Math.round(percent)}%`;
+    }
+
+    function renderStreak() {
+      refreshStreakStatus();
+      els.streakDays.textContent = state.streak.current;
+      els.longestStreak.textContent = `${state.streak.longest} ${state.streak.longest === 1 ? "day" : "days"}`;
+      els.streakStatus.textContent = state.streak.status;
+    }
+
+    function renderXp() {
+      const info = getLevelInfo();
+      els.levelName.textContent = info.current.name;
+      els.xpTotal.textContent = `${state.xp} XP`;
+      els.levelRange.textContent = info.next ? `${state.xp - info.start} / ${info.end - info.start} XP to ${info.next.name}` : "Max level reached";
+      els.levelPercent.textContent = `${Math.round(info.progress)}%`;
+      els.xpProgressBar.style.width = `${info.progress}%`;
+      els.sidebarLevelHint.textContent = info.next ? `${info.next.name} unlocks at ${info.next.xp} XP.` : "Legend level reached.";
+      els.levelBadges.innerHTML = levels.map(level => `
+        <span class="rounded-full px-3 py-1 text-sm font-black ${state.xp >= level.xp ? "bg-emerald-500/12 text-emerald-600 dark:text-emerald-300" : "bg-zinc-500/10 muted-text"}">${level.name}</span>
+      `).join("");
+    }
+
+    function renderAchievements() {
+      els.achievementGrid.innerHTML = badgeDefinitions.map(badge => {
+        const unlocked = badge.isUnlocked(state);
+        return `
+          <div class="badge-card rounded-lg border p-4 transition ${unlocked ? "" : "opacity-60"}" style="border-color: var(--border); background: var(--input);">
+            <div class="flex items-start gap-3">
+              <span class="grid h-10 w-10 place-items-center rounded-lg ${unlocked ? "bg-amber-500/14 text-amber-500" : "bg-zinc-500/10 muted-text"}">
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4Z" /><path d="M5 6H3v1a4 4 0 0 0 4 4M19 6h2v1a4 4 0 0 1-4 4" /></svg>
+              </span>
+              <div>
+                <p class="font-black">${badge.title}</p>
+                <p class="mt-1 text-sm muted-text">${badge.detail}</p>
+                <p class="mt-2 text-xs font-black ${unlocked ? "text-emerald-600 dark:text-emerald-300" : "muted-text"}">${unlocked ? "Unlocked" : "Locked"}</p>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderPomodoro() {
+      els.customMinutes.value = state.pomodoroSettings.minutes;
+      els.focusSessions.textContent = state.pomodoro.sessions;
+      els.focusMinutes.textContent = formatMinutes(state.pomodoro.minutes);
+      updateTimerDisplay();
+    }
+
+    function renderNotes() {
+      els.notesCount.textContent = `${state.notes.length} ${state.notes.length === 1 ? "note" : "notes"}`;
+      const query = els.globalSearch.value.trim().toLowerCase();
+      const notes = state.notes
+        .filter(note => !query || note.text.toLowerCase().includes(query))
+        .sort((a, b) => b.createdAt - a.createdAt);
+
+      if (!notes.length) {
+        els.notesList.innerHTML = emptyState("No notes yet", "Capture a quick note before it slips away.");
+        return;
+      }
+
+      els.notesList.innerHTML = notes.map(note => `
+        <article class="scale-in rounded-lg border p-4" style="border-color: var(--border); background: var(--input);">
+          <p class="whitespace-pre-wrap leading-relaxed">${escapeHtml(note.text)}</p>
+          <div class="mt-4 flex items-center justify-between gap-3">
+            <p class="text-xs font-bold muted-text">${new Date(note.createdAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
+            <div class="flex gap-2">
+              <button class="icon-btn h-9 w-9" data-note-edit="${note.id}" type="button" title="Edit note" aria-label="Edit note">
+                <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z" /></svg>
+              </button>
+              <button class="icon-btn h-9 w-9" data-note-delete="${note.id}" type="button" title="Delete note" aria-label="Delete note">
+                <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" /></svg>
+              </button>
+            </div>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    function renderWeeklyChart() {
+      const maxValue = Math.max(1, ...state.weeklyProgress.values);
+      els.weeklyChart.innerHTML = state.weeklyProgress.values.map((value, index) => {
+        const height = Math.max(8, Math.round((value / maxValue) * 100));
+        return `
+          <div class="flex h-full flex-col items-center justify-end gap-2">
+            <div class="flex h-full w-full items-end rounded-lg border p-1" style="border-color: var(--border); background: var(--input);">
+              <div class="chart-bar" style="height: ${height}%; animation-delay: ${index * 45}ms;"></div>
+            </div>
+            <span class="text-xs font-black muted-text">${dayNames[index]}</span>
+            <span class="text-xs font-bold">${value}</span>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderSubjects() {
+      const query = els.globalSearch.value.trim().toLowerCase();
+      const subjects = state.subjects.filter(subject => !query || subject.name.toLowerCase().includes(query));
+      els.subjectCount.textContent = `${state.subjects.length} ${state.subjects.length === 1 ? "subject" : "subjects"}`;
+
+      if (!subjects.length) {
+        els.subjectList.innerHTML = emptyState("No subjects found", "Add a subject to track learning progress.");
+        return;
+      }
+
+      els.subjectList.innerHTML = subjects.map(subject => `
+        <article class="scale-in rounded-lg border p-4" style="border-color: var(--border); background: var(--input);">
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div class="min-w-0">
+              <h3 class="font-black">${escapeHtml(subject.name)}</h3>
+              <p class="mt-1 text-sm muted-text">${subject.progress}% complete</p>
+            </div>
+            <div class="flex gap-2">
+              <button class="icon-btn h-9 w-9" data-subject-edit="${subject.id}" type="button" title="Edit subject" aria-label="Edit subject">
+                <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z" /></svg>
+              </button>
+              <button class="icon-btn h-9 w-9" data-subject-delete="${subject.id}" type="button" title="Delete subject" aria-label="Delete subject">
+                <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" /></svg>
+              </button>
+            </div>
+          </div>
+          <div class="mt-4 grid gap-3 sm:grid-cols-[1fr_5rem] sm:items-center">
+            <input class="w-full accent-blue-600" data-subject-range="${subject.id}" type="range" min="0" max="100" value="${subject.progress}" aria-label="${escapeHtml(subject.name)} progress">
+            <input class="form-field h-10 py-1 text-center font-bold" data-subject-number="${subject.id}" type="number" min="0" max="100" value="${subject.progress}" aria-label="${escapeHtml(subject.name)} progress number">
+          </div>
+          <div class="progress-track mt-3">
+            <div class="progress-fill" style="width: ${subject.progress}%;"></div>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    function emptyState(title, body) {
+      return `
+        <div class="rounded-lg border border-dashed p-5 text-center" style="border-color: var(--border); background: var(--input);">
+          <p class="font-black">${title}</p>
+          <p class="mt-1 text-sm muted-text">${body}</p>
+        </div>
+      `;
+    }
+
+    function formatHours(value) {
+      return Number(value).toFixed(value % 1 === 0 ? 0 : 1);
+    }
+
+    function formatMinutes(minutes) {
+      if (minutes < 60) return `${minutes}m`;
+      const hours = Math.floor(minutes / 60);
+      const mins = minutes % 60;
+      return mins ? `${hours}h ${mins}m` : `${hours}h`;
+    }
+
+    function updateTimerDisplay() {
+      const minutes = Math.floor(timer.remainingSeconds / 60);
+      const seconds = timer.remainingSeconds % 60;
+      els.timerDisplay.textContent = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+      const elapsed = timer.totalSeconds - timer.remainingSeconds;
+      const progress = timer.totalSeconds ? clamp((elapsed / timer.totalSeconds) * 100, 0, 100) : 0;
+      els.timerRing.style.setProperty("--timer-progress", `${progress}%`);
+    }
+
+    function resetTimerToSettings() {
+      timer.totalSeconds = state.pomodoroSettings.minutes * 60;
+      timer.remainingSeconds = timer.totalSeconds;
+      updateTimerDisplay();
+    }
+
+    function startTimer() {
+      if (timer.running) return;
+      timer.running = true;
+      timer.interval = setInterval(() => {
+        timer.remainingSeconds -= 1;
+        if (timer.remainingSeconds <= 0) {
+          completeFocusSession();
+          return;
+        }
+        updateTimerDisplay();
+      }, 1000);
+    }
+
+    function pauseTimer() {
+      timer.running = false;
+      clearInterval(timer.interval);
+      timer.interval = null;
+    }
+
+    function completeFocusSession() {
+      pauseTimer();
+      state.pomodoro.sessions += 1;
+      state.pomodoro.minutes += state.pomodoroSettings.minutes;
+      addXp(12);
+      addWeeklyPoint(Math.max(1, Math.round(state.pomodoroSettings.minutes / 25)));
+      resetTimerToSettings();
+      renderAll();
+    }
+
+    function updateThemeIcon() {
+      const isDark = document.documentElement.classList.contains("dark");
+      els.themeIcon.innerHTML = isDark
+        ? '<path d="M21 12.8A8.4 8.4 0 1 1 11.2 3 6.6 6.6 0 0 0 21 12.8Z" />'
+        : '<path d="M12 3v2M12 19v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M3 12h2M19 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" /><circle cx="12" cy="12" r="4" />';
+    }
+
+    function focusSection(selector, inputSelector) {
+      document.querySelector(selector).scrollIntoView({ behavior: "smooth", block: "start" });
+      window.setTimeout(() => {
+        const input = document.querySelector(inputSelector);
+        if (input) input.focus();
+      }, 320);
+    }
+
+
+    function wireEvents() {
+      els.themeToggle.addEventListener("click", () => {
+        document.documentElement.classList.toggle("dark");
+        localStorage.setItem(THEME_KEY, document.documentElement.classList.contains("dark") ? "dark" : "light");
+        updateThemeIcon();
+      });
+
+      els.sidebarToggle.addEventListener("click", () => {
+        const collapsed = document.body.dataset.sidebar === "collapsed";
+        document.body.dataset.sidebar = collapsed ? "expanded" : "collapsed";
+      });
+
+      els.mobileMenuButton.addEventListener("click", () => document.body.classList.add("mobile-sidebar-open"));
+      els.mobileOverlay.addEventListener("click", () => document.body.classList.remove("mobile-sidebar-open"));
+
+      $$("[data-nav-link]").forEach(link => {
+        link.addEventListener("click", () => {
+          $$("[data-nav-link]").forEach(item => item.classList.remove("active"));
+          link.classList.add("active");
+          document.body.classList.remove("mobile-sidebar-open");
+        });
+      });
+
+      els.globalSearch.addEventListener("input", () => {
+        els.taskSearch.value = els.globalSearch.value;
+        renderTasks();
+        renderNotes();
+        renderSubjects();
+      });
+
+      els.taskSearch.addEventListener("input", renderTasks);
+      els.taskFilter.addEventListener("change", renderTasks);
+
+      els.plannerForm.addEventListener("submit", event => {
+        event.preventDefault();
+        state.planner.push({ id: makeId("plan"), time: els.plannerTime.value, title: els.plannerTitle.value.trim(), done: false, awarded: false });
+        els.plannerForm.reset();
+        renderAll();
+      });
+
+      els.plannerList.addEventListener("click", event => {
+        const toggle = event.target.closest("[data-planner-toggle]");
+        const del = event.target.closest("[data-planner-delete]");
+        if (toggle) {
+          const item = state.planner.find(plan => plan.id === toggle.dataset.plannerToggle);
+          if (!item) return;
+          const wasDone = item.done;
+          item.done = !item.done;
+          if (!wasDone && !item.awarded) {
+            item.awarded = true;
+            addXp(8);
+            addWeeklyPoint(1);
+          }
+          renderAll();
+        }
+        if (del) {
+          state.planner = state.planner.filter(plan => plan.id !== del.dataset.plannerDelete);
+          renderAll();
+        }
+      });
+
+      els.taskForm.addEventListener("submit", event => {
+        event.preventDefault();
+        const id = els.taskEditingId.value;
+        if (id) {
+          const task = state.tasks.find(item => item.id === id);
+          if (task) {
+            task.title = els.taskTitle.value.trim();
+            task.priority = els.taskPriority.value;
+            task.dueDate = els.taskDueDate.value;
+          }
+        } else {
+          state.tasks.push({
+            id: makeId("task"),
+            title: els.taskTitle.value.trim(),
+            priority: els.taskPriority.value,
+            dueDate: els.taskDueDate.value,
+            completed: false,
+            awarded: false,
+            createdAt: Date.now()
+          });
+          state.statistics.tasksCreated += 1;
+        }
+        els.taskForm.reset();
+        els.taskDueDate.value = localDateKey();
+        els.taskEditingId.value = "";
+        els.taskSubmitButton.innerHTML = '<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" /></svg>Add Task';
+        refreshStreakStatus();
+        renderAll();
+      });
+
+      els.taskList.addEventListener("click", event => {
+        const toggle = event.target.closest("[data-task-toggle]");
+        const edit = event.target.closest("[data-task-edit]");
+        const del = event.target.closest("[data-task-delete]");
+        if (toggle) {
+    const task = state.tasks.find(item => item.id === toggle.dataset.taskToggle);
+    if (!task) return;
+
+    task.completed = !task.completed;
+
+    if (task.completed) {
+
+        if (!task.awarded) {
+            task.awarded = true;
+            state.statistics.totalTasksCompleted++;
+            addXp(15);
+            addWeeklyPoint(1);
+        }
+
+    } else {
+
+        if (task.awarded) {
+            task.awarded = false;
+
+            state.xp = Math.max(0, state.xp - 15);
+
+            if (state.statistics.totalTasksCompleted > 0) {
+                state.statistics.totalTasksCompleted--;
+            }
+        }
+
+    }
+
+    maybeAdvanceStreak();
+    renderAll();
+}
+        if (edit) {
+          const task = state.tasks.find(item => item.id === edit.dataset.taskEdit);
+          if (!task) return;
+          els.taskEditingId.value = task.id;
+          els.taskTitle.value = task.title;
+          els.taskPriority.value = task.priority;
+          els.taskDueDate.value = task.dueDate;
+          els.taskSubmitButton.innerHTML = '<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z" /></svg>Save Task';
+          focusSection("#tasks", "#taskTitle");
+        }
+        if (del) {
+
+    const task = state.tasks.find(
+        t => t.id === del.dataset.taskDelete
+    );
+
+    if (task && task.completed && task.awarded) {
+        state.xp = Math.max(0, state.xp - 15);
+
+        if (state.statistics.totalTasksCompleted > 0) {
+            state.statistics.totalTasksCompleted--;
+        }
+    }
+
+    state.tasks = state.tasks.filter(
+        t => t.id !== del.dataset.taskDelete
+    );
+
+    maybeAdvanceStreak();
+    renderAll();
+}
+      });
+
+      els.saveGoalButton.addEventListener("click", () => {
+        state.dailyGoal.hours = clamp(Number(els.goalHoursInput.value) || 5, 0.5, 24);
+        renderAll();
+      });
+
+      els.startTimer.addEventListener("click", startTimer);
+      els.pauseTimer.addEventListener("click", pauseTimer);
+      els.resetTimer.addEventListener("click", () => {
+        pauseTimer();
+        resetTimerToSettings();
+      });
+
+      els.customMinutes.addEventListener("change", () => {
+        state.pomodoroSettings.minutes = clamp(Number(els.customMinutes.value) || 25, 1, 180);
+        pauseTimer();
+        resetTimerToSettings();
+        renderAll();
+      });
+
+      els.noteForm.addEventListener("submit", event => {
+        event.preventDefault();
+        state.notes.push({ id: makeId("note"), text: els.noteText.value.trim(), createdAt: Date.now() });
+        els.noteForm.reset();
+        renderAll();
+      });
+
+      els.notesList.addEventListener("click", event => {
+        const edit = event.target.closest("[data-note-edit]");
+        const del = event.target.closest("[data-note-delete]");
+        if (edit) {
+          const note = state.notes.find(item => item.id === edit.dataset.noteEdit);
+          if (!note) return;
+          const updated = prompt("Edit note", note.text);
+          if (updated !== null && updated.trim()) {
+            note.text = updated.trim();
+            renderAll();
+          }
+        }
+        if (del) {
+          state.notes = state.notes.filter(note => note.id !== del.dataset.noteDelete);
+          renderAll();
+        }
+      });
+
+      els.subjectForm.addEventListener("submit", event => {
+        event.preventDefault();
+        state.subjects.push({
+          id: makeId("subject"),
+          name: els.subjectName.value.trim(),
+          progress: clamp(Number(els.subjectProgress.value) || 0, 0, 100)
+        });
+        els.subjectForm.reset();
+        els.subjectProgress.value = 50;
+        renderAll();
+      });
+
+      els.subjectList.addEventListener("input", event => {
+        const range = event.target.closest("[data-subject-range]");
+        const number = event.target.closest("[data-subject-number]");
+        const id = range ? range.dataset.subjectRange : number ? number.dataset.subjectNumber : null;
+        if (!id) return;
+        const subject = state.subjects.find(item => item.id === id);
+        if (!subject) return;
+        subject.progress = clamp(Number(event.target.value) || 0, 0, 100);
+        saveState();
+        renderSubjects();
+      });
+
+      els.subjectList.addEventListener("click", event => {
+        const edit = event.target.closest("[data-subject-edit]");
+        const del = event.target.closest("[data-subject-delete]");
+        if (edit) {
+          const subject = state.subjects.find(item => item.id === edit.dataset.subjectEdit);
+          if (!subject) return;
+          const name = prompt("Subject name", subject.name);
+          if (name === null || !name.trim()) return;
+          const progress = prompt("Progress percentage", subject.progress);
+          if (progress === null) return;
+          subject.name = name.trim();
+          subject.progress = clamp(Number(progress) || 0, 0, 100);
+          renderAll();
+        }
+        if (del) {
+          state.subjects = state.subjects.filter(subject => subject.id !== del.dataset.subjectDelete);
+          renderAll();
+        }
+      });
+
+      $$("[data-quick]").forEach(button => {
+        button.addEventListener("click", () => {
+          const action = button.dataset.quick;
+          if (action === "task") focusSection("#tasks", "#taskTitle");
+          if (action === "subject") focusSection("#subjects", "#subjectName");
+          if (action === "note") focusSection("#notes", "#noteText");
+          if (action === "focus") {
+            document.querySelector("#pomodoro").scrollIntoView({ behavior: "smooth", block: "start" });
+            startTimer();
+          }
+        });
+      });
+
+      
+      els.resetDataButton.addEventListener("click", () => {
+        if (!confirm("Reset StudyFlow data in this browser?")) return;
+        localStorage.removeItem(STORE_KEY);
+        state = createDefaultState();
+        pauseTimer();
+        timer.totalSeconds = state.pomodoroSettings.minutes * 60;
+        timer.remainingSeconds = timer.totalSeconds;
+        renderAll();
+      });
+    }
+
+    function init() {
+      els.taskDueDate.value = localDateKey();
+      els.plannerTime.value = "08:00";
+      state = normalizeState(state);
+      resetTimerToSettings();
+      wireEvents();
+      renderAll();
+    }
+
+    init();
+  </script>
+</body>
+</html>
