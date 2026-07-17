@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Log in or create your StudyFlow account">
+  <title>Sign in - StudyFlow</title>
+  <script>
+    // Match index.html's theme boot logic exactly, so the theme never
+    // flashes/flips when moving between login.html and index.html.
+    (function () {
+      const savedTheme = localStorage.getItem("studyflow.theme");
+      const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      if (savedTheme === "dark" || (!savedTheme && prefersDark)) {
+        document.documentElement.classList.add("dark");
+      }
+    })();
+
+    tailwind = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          screens: {
+            xs: "420px"
+          }
+        }
+      }
+    };
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* ---------------------------------------------------------------
+       Design tokens copied verbatim from index.html so this page is
+       pixel-consistent with the dashboard. Nothing in the dashboard's
+       own <style> block was touched to produce this file.
+    ----------------------------------------------------------------*/
+    :root {
+      --bg: #f6f7fb;
+      --surface: rgba(255, 255, 255, 0.86);
+      --surface-strong: #ffffff;
+      --text: #18181b;
+      --muted: #6f717a;
+      --border: rgba(24, 24, 27, 0.09);
+      --shadow: 0 18px 55px rgba(43, 48, 70, 0.11);
+      --soft-shadow: 0 10px 30px rgba(43, 48, 70, 0.08);
+      --accent: #2563eb;
+      --accent-2: #0f9f7a;
+      --accent-3: #f97316;
+      --accent-4: #a855f7;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --success: #10b981;
+      --ring-track: #e8ebf2;
+      --input: rgba(255, 255, 255, 0.9);
+    }
+
+    .dark {
+      --bg: #151515;
+      --surface: rgba(32, 32, 35, 0.82);
+      --surface-strong: #202023;
+      --text: #f4f4f5;
+      --muted: #a1a1aa;
+      --border: rgba(244, 244, 245, 0.1);
+      --shadow: 0 18px 60px rgba(0, 0, 0, 0.34);
+      --soft-shadow: 0 10px 32px rgba(0, 0, 0, 0.28);
+      --accent: #60a5fa;
+      --accent-2: #34d399;
+      --accent-3: #fb923c;
+      --accent-4: #c084fc;
+      --ring-track: #2c2c30;
+      --input: rgba(39, 39, 42, 0.9);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      min-height: 100vh;
+      overflow-x: hidden;
+      background:
+        linear-gradient(135deg, rgba(37, 99, 235, 0.08), transparent 28%),
+        linear-gradient(315deg, rgba(15, 159, 122, 0.08), transparent 24%),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      transition: background-color 280ms ease, color 280ms ease;
+    }
+
+    button, input, select, textarea { font: inherit; }
+    button { touch-action: manipulation; }
+
+    .glass-panel {
+      min-width: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      box-shadow: var(--soft-shadow);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      transition: background-color 240ms ease, border-color 240ms ease, box-shadow 240ms ease, transform 240ms ease;
+    }
+
+    .icon-btn {
+      display: inline-flex;
+      height: 2.5rem;
+      width: 2.5rem;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--input);
+      color: var(--text);
+      transition: transform 180ms ease, background-color 180ms ease, border-color 180ms ease;
+    }
+    .icon-btn:hover { transform: translateY(-1px); border-color: rgba(37, 99, 235, 0.28); }
+
+    .primary-btn, .soft-btn, .danger-btn {
+      display: inline-flex;
+      min-height: 2.6rem;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      border-radius: 8px;
+      padding: 0.65rem 0.95rem;
+      font-weight: 700;
+      transition: transform 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
+      white-space: nowrap;
+      max-width: 100%;
+    }
+    .primary-btn {
+      background: linear-gradient(135deg, var(--accent), #7c3aed);
+      color: #ffffff;
+      box-shadow: 0 14px 34px rgba(37, 99, 235, 0.24);
+    }
+    .soft-btn { border: 1px solid var(--border); background: var(--input); color: var(--text); }
+    .danger-btn { border: 1px solid rgba(239, 68, 68, 0.24); background: rgba(239, 68, 68, 0.1); color: #dc2626; }
+    .primary-btn:hover:not(:disabled), .soft-btn:hover:not(:disabled) { transform: translateY(-1px); }
+    .primary-btn:disabled, .soft-btn:disabled { opacity: 0.68; cursor: not-allowed; transform: none; }
+
+    .form-field {
+      min-width: 0;
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--input);
+      color: var(--text);
+      outline: none;
+      padding: 0.7rem 0.82rem;
+      transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+    }
+    .form-field:focus { border-color: rgba(37, 99, 235, 0.58); box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12); }
+    .form-field.invalid { border-color: var(--danger); }
+    .form-field.invalid:focus { box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12); }
+
+    .muted-text { color: var(--muted); }
+
+    .fade-up { opacity: 0; transform: translateY(12px); animation: fadeUp 520ms ease forwards; }
+    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+    .theme-toggle-thumb { transform: translateX(0); transition: transform 220ms ease; }
+    .dark .theme-toggle-thumb { transform: translateX(1.55rem); }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 1ms !important;
+        scroll-behavior: auto !important;
+        transition-duration: 1ms !important;
+      }
+    }
+
+    /* ----------------------- New auth-only styles ----------------------- */
+
+    .auth-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 1024px) {
+      .auth-shell { grid-template-columns: 1.05fr 1fr; }
+    }
+
+    .auth-brand {
+      position: relative;
+      display: none;
+      overflow: hidden;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: clamp(2rem, 4vw, 3.5rem);
+      color: #fff;
+      background: linear-gradient(155deg, #2452e0 0%, #6d3fd6 52%, #0f9f7a 120%);
+    }
+    @media (min-width: 1024px) { .auth-brand { display: flex; } }
+
+    .auth-blob {
+      position: absolute;
+      border-radius: 999px;
+      filter: blur(60px);
+      opacity: 0.55;
+      background: rgba(255, 255, 255, 0.35);
+      animation: sfFloat 9s ease-in-out infinite;
+    }
+    @keyframes sfFloat {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(0, -16px); }
+    }
+
+    .auth-feature {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.85rem;
+      padding: 0.9rem 1rem;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      backdrop-filter: blur(6px);
+    }
+
+    .auth-panel {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: clamp(1.25rem, 4vw, 3rem);
+    }
+
+    .auth-card {
+      width: 100%;
+      max-width: 27rem;
+      border-radius: 16px;
+      padding: clamp(1.5rem, 4vw, 2.25rem);
+    }
+
+    .auth-view {
+      opacity: 1;
+      transform: translateY(0);
+      transition: opacity 220ms ease, transform 220ms ease;
+    }
+    .auth-view--leaving { opacity: 0; transform: translateY(-8px); }
+    .auth-view--entering { opacity: 0; transform: translateY(8px); }
+    .auth-view[hidden] { display: none; }
+
+    .field { margin-top: 1rem; }
+    .field label {
+      display: block;
+      margin-bottom: 0.4rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+    .field-error {
+      margin-top: 0.35rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--danger);
+      min-height: 1rem;
+    }
+    .field-error:empty { display: none; }
+
+    .password-wrap { position: relative; }
+    .password-wrap .form-field { padding-right: 2.6rem; }
+    .password-toggle {
+      position: absolute;
+      right: 0.55rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      padding: 0.3rem;
+      color: var(--muted);
+      cursor: pointer;
+      display: inline-flex;
+    }
+    .password-toggle:hover { color: var(--text); }
+
+    .strength-meter { margin-top: 0.6rem; }
+    .strength-track {
+      height: 0.4rem;
+      border-radius: 999px;
+      overflow: hidden;
+      background: var(--ring-track);
+    }
+    .strength-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      transition: width 220ms ease, background-color 220ms ease;
+      background: var(--danger);
+    }
+    .strength-label {
+      margin-top: 0.35rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .row-between {
+      margin-top: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .checkbox-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .checkbox-row input { accent-color: var(--accent); width: 1.05rem; height: 1.05rem; }
+
+    .link-btn {
+      background: none;
+      border: none;
+      padding: 0;
+      color: var(--accent);
+      font-weight: 700;
+      font-size: inherit;
+      cursor: pointer;
+    }
+    .link-btn:hover { text-decoration: underline; }
+
+    .w-full { width: 100%; }
+
+    .btn-spinner {
+      width: 1rem;
+      height: 1rem;
+      border-radius: 50%;
+      border: 2px solid color-mix(in srgb, currentColor 30%, transparent);
+      border-top-color: currentColor;
+      animation: sfSpin 700ms linear infinite;
+      flex: none;
+    }
+    @keyframes sfSpin { to { transform: rotate(360deg); } }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin: 1.4rem 0;
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+
+    .switch-line {
+      margin-top: 1.4rem;
+      text-align: center;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .auth-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      margin-bottom: 1.6rem;
+    }
+
+    /* Full-page overlay shown while we check whether a session already exists */
+    #authCheckOverlay {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      flex-direction: column;
+      background: var(--bg);
+      transition: opacity 260ms ease;
+    }
+    .sf-spinner {
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 50%;
+      border: 3px solid var(--ring-track);
+      border-top-color: var(--accent);
+      animation: sfSpin 750ms linear infinite;
+    }
+  </style>
+</head>
+<body data-view="login">
+
+  <!-- Shown briefly while Firebase checks for an existing session. -->
+  <div id="authCheckOverlay" aria-live="polite">
+    <div class="sf-spinner" role="status" aria-label="Checking your session"></div>
+    <p class="muted-text text-sm font-semibold">Checking your session…</p>
+  </div>
+
+  <button class="icon-btn fixed right-4 top-4 z-20 xs:right-6 xs:top-6" id="themeToggle" title="Toggle theme" aria-label="Toggle theme">
+    <svg id="themeIcon" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M12 3v2M12 19v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M3 12h2M19 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+      <circle cx="12" cy="12" r="4" />
+    </svg>
+  </button>
+
+  <div class="auth-shell">
+    <!-- Branding panel (desktop only) -->
+    <section class="auth-brand">
+      <div class="auth-blob" style="width:16rem;height:16rem;top:-4rem;left:-4rem;"></div>
+      <div class="auth-blob" style="width:12rem;height:12rem;bottom:2rem;right:-3rem;animation-delay:2.5s;"></div>
+
+      <div class="relative">
+        <div class="flex items-center gap-3">
+          <div class="grid h-12 w-12 place-items-center rounded-lg bg-white/15 text-white shadow-lg backdrop-blur">
+            <svg viewBox="0 0 24 24" class="h-7 w-7" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 19.5V6.8A2.8 2.8 0 0 1 6.8 4H20v14H6.8A2.8 2.8 0 0 0 4 20.8" />
+              <path d="M8 8h8M8 12h6" />
+            </svg>
+          </div>
+          <p class="text-xl font-black">StudyFlow</p>
+        </div>
+        <h1 class="mt-10 max-w-md text-3xl font-black leading-tight xl:text-4xl">A calm, focused space to actually finish what you start.</h1>
+        <p class="mt-4 max-w-sm text-white/80">Plan your day, protect your streak, and watch your XP grow — all synced to your account.</p>
+      </div>
+
+      <div class="relative mt-10 space-y-3">
+        <div class="auth-feature">
+          <svg viewBox="0 0 24 24" class="h-5 w-5 flex-none" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 3v3M17 3v3M4 8h16M6 5h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" /></svg>
+          <div>
+            <p class="font-bold">Daily planner</p>
+            <p class="text-sm text-white/75">Timeline your day, hour by hour.</p>
+          </div>
+        </div>
+        <div class="auth-feature">
+          <svg viewBox="0 0 24 24" class="h-5 w-5 flex-none" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3s5 4 5 9a5 5 0 0 1-10 0c0-2 1-4 3-6 0 3 2 4 2 4s2-2 0-7Z" /></svg>
+          <div>
+            <p class="font-bold">Study streaks</p>
+            <p class="text-sm text-white/75">Stay consistent, one day at a time.</p>
+          </div>
+        </div>
+        <div class="auth-feature">
+          <svg viewBox="0 0 24 24" class="h-5 w-5 flex-none" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4Z" /><path d="M5 6H3v1a4 4 0 0 0 4 4M19 6h2v1a4 4 0 0 1-4 4" /></svg>
+          <div>
+            <p class="font-bold">XP &amp; levels</p>
+            <p class="text-sm text-white/75">Turn finished work into visible progress.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Auth panel -->
+    <section class="auth-panel">
+      <div class="auth-card glass-panel fade-up">
+        <div class="auth-logo lg:hidden">
+          <div class="grid h-11 w-11 place-items-center rounded-lg bg-gradient-to-br from-blue-600 via-violet-600 to-emerald-500 text-white shadow-lg">
+            <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 19.5V6.8A2.8 2.8 0 0 1 6.8 4H20v14H6.8A2.8 2.8 0 0 0 4 20.8" />
+              <path d="M8 8h8M8 12h6" />
+            </svg>
+          </div>
+          <p class="text-lg font-black">StudyFlow</p>
+        </div>
+
+        <!-- ============ LOGIN VIEW ============ -->
+        <div class="auth-view" data-view-panel="login">
+          <h1 class="text-2xl font-black">Welcome back</h1>
+          <p class="mt-1 muted-text">Log in to pick up right where you left off.</p>
+
+          <form id="loginForm" novalidate>
+            <div class="field">
+              <label for="loginEmail">Email</label>
+              <input id="loginEmail" name="email" class="form-field" type="email" autocomplete="email" placeholder="you@example.com" required>
+              <p class="field-error" id="loginEmailError"></p>
+            </div>
+
+            <div class="field">
+              <label for="loginPassword">Password</label>
+              <div class="password-wrap">
+                <input id="loginPassword" name="password" class="form-field" type="password" autocomplete="current-password" placeholder="Enter your password" required>
+                <button type="button" class="password-toggle" data-target="loginPassword" aria-label="Show password">
+                  <svg class="eye-icon h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+                </button>
+              </div>
+              <p class="field-error" id="loginPasswordError"></p>
+            </div>
+
+            <div class="row-between">
+              <label class="checkbox-row" for="rememberMe">
+                <input id="rememberMe" type="checkbox" checked>
+                Remember me
+              </label>
+              <button type="button" class="link-btn text-sm" id="showForgot">Forgot password?</button>
+            </div>
+
+            <button type="submit" class="primary-btn w-full mt-6" id="loginSubmit">
+              <span class="btn-label">Log in</span>
+            </button>
+          </form>
+
+          <div class="divider">or continue with</div>
+
+          <button type="button" class="soft-btn w-full" id="googleLoginBtn">
+            <svg viewBox="0 0 48 48" class="h-5 w-5" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.9 32.6 29.4 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.6 15.1 18.9 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4c-7.7 0-14.3 4.4-17.7 10.7z"/><path fill="#4CAF50" d="M24 44c5.5 0 10.4-1.9 14.1-5.1l-6.5-5.5C29.6 35.1 26.9 36 24 36c-5.4 0-9.9-3.4-11.5-8.2l-6.5 5C9.6 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.4-2.3 4.4-4.3 5.9l6.5 5.5C39.9 37.9 44 32.4 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>
+            <span class="btn-label">Continue with Google</span>
+          </button>
+
+          <p class="switch-line">New to StudyFlow? <button type="button" class="link-btn" id="showSignup">Create an account</button></p>
+        </div>
+
+        <!-- ============ SIGNUP VIEW ============ -->
+        <div class="auth-view" data-view-panel="signup" hidden>
+          <h1 class="text-2xl font-black">Create your account</h1>
+          <p class="mt-1 muted-text">Set up StudyFlow in under a minute.</p>
+
+          <form id="signupForm" novalidate>
+            <div class="field">
+              <label for="signupName">Full name</label>
+              <input id="signupName" name="name" class="form-field" type="text" autocomplete="name" placeholder="Jordan Lee" required>
+              <p class="field-error" id="signupNameError"></p>
+            </div>
+
+            <div class="field">
+              <label for="signupEmail">Email</label>
+              <input id="signupEmail" name="email" class="form-field" type="email" autocomplete="email" placeholder="you@example.com" required>
+              <p class="field-error" id="signupEmailError"></p>
+            </div>
+
+            <div class="field">
+              <label for="signupPassword">Password</label>
+              <div class="password-wrap">
+                <input id="signupPassword" name="password" class="form-field" type="password" autocomplete="new-password" placeholder="At least 8 characters" required>
+                <button type="button" class="password-toggle" data-target="signupPassword" aria-label="Show password">
+                  <svg class="eye-icon h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+                </button>
+              </div>
+              <div class="strength-meter" id="strengthMeter" hidden>
+                <div class="strength-track"><div class="strength-fill" id="strengthFill"></div></div>
+                <p class="strength-label" id="strengthLabel"></p>
+              </div>
+              <p class="field-error" id="signupPasswordError"></p>
+            </div>
+
+            <div class="field">
+              <label for="signupConfirm">Confirm password</label>
+              <div class="password-wrap">
+                <input id="signupConfirm" name="confirm" class="form-field" type="password" autocomplete="new-password" placeholder="Re-enter your password" required>
+                <button type="button" class="password-toggle" data-target="signupConfirm" aria-label="Show password">
+                  <svg class="eye-icon h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+                </button>
+              </div>
+              <p class="field-error" id="signupConfirmError"></p>
+            </div>
+
+            <button type="submit" class="primary-btn w-full mt-6" id="signupSubmit">
+              <span class="btn-label">Create account</span>
+            </button>
+          </form>
+
+          <div class="divider">or continue with</div>
+
+          <button type="button" class="soft-btn w-full" id="googleSignupBtn">
+            <svg viewBox="0 0 48 48" class="h-5 w-5" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.9 32.6 29.4 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.6 15.1 18.9 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4c-7.7 0-14.3 4.4-17.7 10.7z"/><path fill="#4CAF50" d="M24 44c5.5 0 10.4-1.9 14.1-5.1l-6.5-5.5C29.6 35.1 26.9 36 24 36c-5.4 0-9.9-3.4-11.5-8.2l-6.5 5C9.6 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.4-2.3 4.4-4.3 5.9l6.5 5.5C39.9 37.9 44 32.4 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>
+            <span class="btn-label">Continue with Google</span>
+          </button>
+
+          <p class="switch-line">Already have an account? <button type="button" class="link-btn" id="showLogin">Log in</button></p>
+        </div>
+
+        <!-- ============ FORGOT PASSWORD VIEW ============ -->
+        <div class="auth-view" data-view-panel="forgot" hidden>
+          <h1 class="text-2xl font-black">Reset your password</h1>
+          <p class="mt-1 muted-text">Enter your email and we'll send you a reset link.</p>
+
+          <form id="forgotForm" novalidate>
+            <div class="field">
+              <label for="forgotEmail">Email</label>
+              <input id="forgotEmail" name="email" class="form-field" type="email" autocomplete="email" placeholder="you@example.com" required>
+              <p class="field-error" id="forgotEmailError"></p>
+            </div>
+
+            <button type="submit" class="primary-btn w-full mt-6" id="forgotSubmit">
+              <span class="btn-label">Send reset link</span>
+            </button>
+          </form>
+
+          <p class="switch-line"><button type="button" class="link-btn" id="showLoginFromForgot">&larr; Back to login</button></p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script type="module" src="js/auth.js"></script>
+</body>
+</html>
