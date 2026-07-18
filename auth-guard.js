@@ -142,16 +142,26 @@ function buildAccountMenu(displayName, email) {
 
 async function handleLogout() {
   const button = document.getElementById("sfLogoutButton");
+
   if (button) {
     button.disabled = true;
     button.style.opacity = "0.6";
   }
+
   try {
     await logoutCurrentUser();
-    // onAuthStateChanged below will detect the signed-out state and
-    // redirect to login.html automatically.
+
+    showToast("Logged out successfully!", "success");
+
+    setTimeout(() => {
+      window.location.replace("login.html");
+    }, 500);
+
   } catch (error) {
+    console.error(error);
+
     showToast("Couldn't log out. Please try again.", "error");
+
     if (button) {
       button.disabled = false;
       button.style.opacity = "1";
