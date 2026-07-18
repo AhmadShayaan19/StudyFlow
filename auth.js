@@ -9,7 +9,7 @@
  * ------------------------------------------------------------------
  */
 
-import { auth, googleProvider } from "firebase-config.js";
+import { auth, googleProvider } from "./firebase-config.js";
 import {
   onAuthStateChanged,
   createUserWithEmailAndPassword,
