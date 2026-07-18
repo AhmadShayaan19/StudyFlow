@@ -1688,27 +1688,7 @@
       renderAll();
     }
 
-   function updateThemeIcon() {
-  const isDark = document.documentElement.classList.contains("dark");
-
-  const thumb = document.querySelector(".theme-toggle-thumb");
-
-  if (isDark) {
-    thumb.style.transform = "translateX(36px)";
-    thumb.style.background = "#3f3f46";
-    thumb.style.color = "#ffffff";
-
-    els.themeIcon.innerHTML =
-      '<path d="M21 12.8A8.4 8.4 0 1 1 11.2 3 6.6 6.6 0 0 0 21 12.8Z" />';
-  } else {
-    thumb.style.transform = "translateX(0)";
-    thumb.style.background = "#facc15";
-    thumb.style.color = "#111827";
-
-    els.themeIcon.innerHTML =
-      '<path d="M12 3v2M12 19v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M3 12h2M19 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" /><circle cx="12" cy="12" r="4"/>';
-  }
-}
+   function updateThemeIcon() { const isDark = document.documentElement.classList.contains("dark"); els.themeIcon.innerHTML = isDark ? '<path d="M21 12.8A8.4 8.4 0 1 1 11.2 3 6.6 6.6 0 0 0 21 12.8Z" />' : '<path d="M12 3v2M12 19v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M3 12h2M19 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" /><circle cx="12" cy="12" r="4" />'; }
     function focusSection(selector, inputSelector) {
       document.querySelector(selector).scrollIntoView({ behavior: "smooth", block: "start" });
       window.setTimeout(() => {
