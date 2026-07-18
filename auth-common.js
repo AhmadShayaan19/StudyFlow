@@ -14,7 +14,7 @@
  * ------------------------------------------------------------------
  */
 
-import { auth } from "./firebase-config.js";
+import { auth } from "firebase-config.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
 
 /* ------------------------------ Toasts ----------------------------- */
